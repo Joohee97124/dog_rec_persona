@@ -1,0 +1,135 @@
+-- ================================
+-- 강아지 관련 테이블
+-- ================================
+
+-- 강아지 기본 정보
+CREATE TABLE DOG (
+    did SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    gender VARCHAR(10),          
+    neuter VARCHAR(20),         
+    state VARCHAR(50),
+    weight DECIMAL(5,2),
+    birth_year INTEGER,
+    image VARCHAR(500),
+    ty1_sc DECIMAL(3,2),
+    ty2_sc DECIMAL(3,2),
+    ty3_sc DECIMAL(3,2),
+    ty4_sc DECIMAL(3,2),
+    ty5_sc DECIMAL(3,2),
+    ty6_sc DECIMAL(3,2),
+    ty7_sc DECIMAL(3,2),
+    ty8_sc DECIMAL(3,2),
+    ty9_sc DECIMAL(3,2),
+    ty10_sc DECIMAL(3,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 강아지 상세 정보
+CREATE TABLE DOG_DETAIL (
+    did INTEGER PRIMARY KEY,
+    story TEXT,
+    per_detail TEXT,
+    ty1_de TEXT,
+    ty2_de TEXT,
+    ty3_de TEXT,
+    ty4_de TEXT,
+    ty5_de TEXT,
+    ty6_de TEXT,
+    ty7_de TEXT,
+    ty8_de TEXT,
+    ty9_de TEXT,
+    ty10_de TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (did) REFERENCES DOG(did) ON DELETE CASCADE
+);
+
+-- 태그 정보
+CREATE TABLE TAG (
+    tag_id SERIAL PRIMARY KEY,
+    tag_name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 강아지-태그 매핑
+CREATE TABLE DOG_TAG_MAP (
+    did INTEGER,
+    tag_id INTEGER,
+    PRIMARY KEY (did, tag_id),
+    FOREIGN KEY (did) REFERENCES DOG(did) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES TAG(tag_id) ON DELETE CASCADE
+);
+
+-- 강아지 임베딩 정보
+CREATE TABLE DOG_EMBEDDING (
+    eid SERIAL PRIMARY KEY,
+    did INTEGER NOT NULL,
+    em_model VARCHAR(100) NOT NULL,
+    em_vector VECTOR(1536), -- OpenAI embedding 차원수에 맞게 조정
+    text TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (did) REFERENCES DOG(did) ON DELETE CASCADE
+);
+
+-- ================================
+-- 사용자 관련 테이블
+-- ================================
+
+-- 사용자 기본 정보
+CREATE TABLE "USER" (
+    uid SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    gender VARCHAR(10),
+    age INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 사용자 프로필
+CREATE TABLE USER_PROFILES (
+    uid INTEGER PRIMARY KEY,
+    house_type INTEGER CHECK (house_type IN (0, 1, 2)),
+    family_mem INTEGER DEFAULT 0, -- 비트플래그로 저장
+    other_pet INTEGER CHECK (other_pet IN (0, 1, 2, 3)),
+    exper_level INTEGER CHECK (exper_level IN (0, 1, 2)),
+    available_time INTEGER,
+    lifestyle INTEGER CHECK (lifestyle IN (0, 1, 2, 3, 4, 5, 6, 7)),
+    per_size VARCHAR(20),
+    per_age VARCHAR(20),
+    per_style INTEGER CHECK (per_style IN (0, 1, 2, 3, 4, 5, 6, 7)),
+    worry INTEGER CHECK (worry IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uid) REFERENCES "USER"(uid) ON DELETE CASCADE
+);
+
+-- ================================
+-- 세션 및 대화 관련 테이블
+-- ================================
+
+-- 세션 정보
+CREATE TABLE SESSION (
+    sid SERIAL PRIMARY KEY,
+    uid INTEGER NOT NULL,
+    did INTEGER,
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP,
+    is_com BOOLEAN DEFAULT FALSE,
+    persona_type VARCHAR(20) CHECK (persona_type IN ('dog', 'shelterStaff')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uid) REFERENCES "USER"(uid) ON DELETE CASCADE,
+    FOREIGN KEY (did) REFERENCES DOG(did) ON DELETE SET NULL
+);
+
+-- 대화 로그
+CREATE TABLE CONVER_LOG (
+    lid SERIAL PRIMARY KEY,
+    sid INTEGER NOT NULL,
+    turn_num INTEGER NOT NULL,
+    sender VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sid) REFERENCES SESSION(sid) ON DELETE CASCADE
+);
