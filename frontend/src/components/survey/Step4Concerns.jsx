@@ -2,36 +2,37 @@
 import { useState } from "react";
 import { useSurvey } from "../../context/SurveyContext";
 
+// ✨ 강아지 점수와 1:1 매칭되는 우려 항목
 const CONCERNS = [
-  { value: "cost", label: "비용 부담", icon: "💰" },
-  { value: "time", label: "시간 부족", icon: "⏰" },
-  { value: "space", label: "공간 부족", icon: "🏠" },
-  { value: "noise", label: "짖음/소음", icon: "🔊" },
-  { value: "health", label: "건강 관리", icon: "🏥" },
-  { value: "training", label: "훈련 어려움", icon: "🎓" },
-  { value: "allergy", label: "알러지", icon: "🤧" },
-  { value: "travel", label: "여행 제약", icon: "✈️" },
-  { value: "lifespan", label: "이별 두려움", icon: "💔" },
-  { value: "responsibility", label: "책임감", icon: "🤝" },
+  { value: "potty",      label: "배변 실수",        icon: "🚽", desc: "훈련이 어려울까봐" },
+  { value: "walk",       label: "산책 시간 부족",    icon: "🚶", desc: "충분히 못 놀아줄까봐" },
+  { value: "bark",       label: "짖음/소음",        icon: "🔊", desc: "이웃에 폐 끼칠까봐" },
+  { value: "separation", label: "분리불안",          icon: "💔", desc: "혼자 두기 미안해서" },
+  { value: "shedding",   label: "털빠짐",            icon: "🧹", desc: "청소·알러지 부담" },
+  { value: "cohab",      label: "다른 동물과 합사",  icon: "🐾", desc: "기존 반려동물과 잘 지낼까" },
 ];
+
+const CONCERN_NONE = {
+  value: "none",
+  label: "특별히 걱정되는 건 없어요",
+  icon: "💛",
+  desc: "어떤 친구든 환영이에요",
+};
 
 export default function Step4Concerns({ onComplete, onPrev }) {
   const { answers, updateAnswers } = useSurvey();
-  const [selected, setSelected] = useState(answers.step4?.concerns || []);
 
-  const toggleConcern = (value) => {
-    setSelected((prev) =>
-      prev.includes(value)
-        ? prev.filter((v) => v !== value)
-        : [...prev, value]
-    );
-  };
+  // ✨ 단일 선택으로 변경 (배열 → 문자열)
+  const [selected, setSelected] = useState(answers.step4?.concern || "");
 
-  const isValid = selected.length > 0;
+  const handleSelect = (value) => setSelected(value);
+
+  const isValid = !!selected;
 
   const handleSubmit = () => {
     if (!isValid) return;
-    updateAnswers("step4", { concerns: selected });
+    // ✨ 키 이름도 concerns(복수) → concern(단수)로 변경
+    updateAnswers("step4", { concern: selected });
     onComplete();
   };
 
@@ -41,32 +42,24 @@ export default function Step4Concerns({ onComplete, onPrev }) {
       <div className="text-center mb-8">
         <div className="text-5xl mb-3 animate-bounce-slow">🤔</div>
         <h2 className="text-2xl font-bold text-amber-900 mb-2">
-          가장 우려되는 점은?
+          가장 걱정되는 점은 무엇인가요?
         </h2>
         <p className="text-amber-700/70 text-sm">
-          중복 선택 가능해요. 솔직하게 알려주세요 💛
+          딱 하나만 골라주세요. 그 걱정이 적은 친구를 우선 추천해드려요 ✨
         </p>
       </div>
 
-      {/* 선택 개수 표시 */}
-      <div className="mb-4 text-center">
-        <span className="inline-block px-4 py-1 bg-yellow-100 text-amber-900 
-                         rounded-full text-sm font-bold">
-          {selected.length}개 선택됨
-        </span>
-      </div>
-
-      {/* 우려사항 그리드 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+      {/* 6개 우려사항 그리드 */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
         {CONCERNS.map((c) => {
-          const isSelected = selected.includes(c.value);
+          const isSelected = selected === c.value;
           return (
             <button
               key={c.value}
               type="button"
-              onClick={() => toggleConcern(c.value)}
+              onClick={() => handleSelect(c.value)}
               className={`relative p-4 rounded-2xl border-2 transition 
-                          flex flex-col items-center gap-2
+                          flex flex-col items-center gap-1 text-center
                 ${
                   isSelected
                     ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
@@ -74,22 +67,42 @@ export default function Step4Concerns({ onComplete, onPrev }) {
                 }`}
             >
               {isSelected && (
-                <span className="absolute top-2 right-2 w-5 h-5 bg-amber-400 
+                <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-amber-400 
                                  text-white rounded-full flex items-center justify-center 
                                  text-xs font-bold">
                   ✓
                 </span>
               )}
-              <span className="text-3xl">{c.icon}</span>
-              <span className="text-sm font-bold text-amber-900 text-center">
+              <span className="text-3xl mb-1">{c.icon}</span>
+              <span className="text-sm font-bold text-amber-900">
                 {c.label}
+              </span>
+              <span className="text-[11px] text-amber-700/60 leading-tight">
+                {c.desc}
               </span>
             </button>
           );
         })}
       </div>
 
-      {/* 완료 버튼 (이전 + 완료) */}
+      {/* "걱정 없음" - 가로 전체 */}
+      <button
+        type="button"
+        onClick={() => handleSelect(CONCERN_NONE.value)}
+        className={`w-full p-3 rounded-2xl border-2 transition 
+                    flex items-center justify-center gap-2 mb-8
+          ${
+            selected === CONCERN_NONE.value
+              ? "border-yellow-400 bg-yellow-100 scale-[1.01] shadow-md"
+              : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200"
+          }`}
+      >
+        <span className="text-2xl">{CONCERN_NONE.icon}</span>
+        <span className="text-sm font-bold text-amber-900">{CONCERN_NONE.label}</span>
+        <span className="text-xs text-amber-700/60">· {CONCERN_NONE.desc}</span>
+      </button>
+
+      {/* 이전 + 완료 버튼 */}
       <div className="flex gap-3">
         <button
           onClick={onPrev}
@@ -110,7 +123,7 @@ export default function Step4Concerns({ onComplete, onPrev }) {
                 : "bg-yellow-50 text-amber-300 cursor-not-allowed border-2 border-yellow-100"
             }`}
         >
-          {isValid ? "🐶 내 강아지 추천받기!" : "최소 1개 이상 선택해주세요"}
+          {isValid ? "🐶 내 강아지 추천받기!" : "1개를 선택해주세요"}
         </button>
       </div>
     </div>

@@ -3,28 +3,63 @@ import { useState } from "react";
 import { useSurvey } from "../../context/SurveyContext";
 
 const HOUSE_TYPES = [
-  { value: "apartment", label: "아파트", icon: "🏢" },
-  { value: "villa", label: "빌라/연립", icon: "🏘️" },
-  { value: "house", label: "주택", icon: "🏡" },
-  { value: "officetel", label: "오피스텔", icon: "🏬" },
+  { value: "one_room", label: "원룸", icon: "🛏️", desc: "1개 공간" },
+  { value: "two_room", label: "투룸", icon: "🏠", desc: "2개 방" },
+  { value: "three_plus", label: "3룸 이상", icon: "🏘️", desc: "방 3개~" },
+  { value: "house", label: "주택", icon: "🏡", desc: "단독/마당" },
 ];
 
 const FAMILY_SIZES = [
-  { value: "1", label: "1인 가구", icon: "🙋" },
+  { value: "1", label: "1인", icon: "🙋" },
   { value: "2", label: "2인", icon: "👫" },
   { value: "3-4", label: "3~4인", icon: "👨‍👩‍👧" },
   { value: "5+", label: "5인 이상", icon: "👨‍👩‍👧‍👦" },
 ];
 
+const FAMILY_MEMBERS = [
+  { value: "infant", label: "영유아", icon: "👶", desc: "0~6세" },
+  { value: "child", label: "미성년 자녀", icon: "🧒", desc: "7~18세" },
+  { value: "senior", label: "어르신", icon: "👴", desc: "65세 이상" },
+  { value: "none", label: "해당없음", icon: "✨", desc: "성인만 거주" },
+];
+
 export default function Step1BasicInfo({ onNext }) {
   const { answers, updateAnswers } = useSurvey();
-  const [form, setForm] = useState(answers.step1);
+  const [form, setForm] = useState({
+    ...answers.step1,
+    familyMembers: answers.step1?.familyMembers || [],
+  });
 
   const handleChange = (key, value) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
+  const toggleMember = (value) => {
+    setForm((prev) => {
+      const current = prev.familyMembers || [];
+
+      // "해당없음" 클릭 시 → 다른 거 다 해제하고 "해당없음"만 선택
+      if (value === "none") {
+        return { ...prev, familyMembers: ["none"] };
+      }
+
+      // 다른 항목 클릭 시 → "해당없음" 자동 해제
+      const filtered = current.filter((v) => v !== "none");
+
+      return {
+        ...prev,
+        familyMembers: filtered.includes(value)
+          ? filtered.filter((v) => v !== value)
+          : [...filtered, value],
+      };
+    });
+  };
+
   const isValid =
-    form.age && form.gender && form.houseType && form.familySize;
+    form.age &&
+    form.gender &&
+    form.houseType &&
+    form.familySize &&
+    form.familyMembers?.length > 0;
 
   const handleSubmit = () => {
     if (!isValid) return;
@@ -93,24 +128,25 @@ export default function Step1BasicInfo({ onNext }) {
               key={type.value}
               type="button"
               onClick={() => handleChange("houseType", type.value)}
-              className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-2
+              className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-1
                 ${
                   form.houseType === type.value
                     ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
                     : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200 hover:bg-yellow-50"
                 }`}
             >
-              <span className="text-3xl">{type.icon}</span>
+              <span className="text-3xl mb-1">{type.icon}</span>
               <span className="text-sm font-bold text-amber-900">
                 {type.label}
               </span>
+              <span className="text-xs text-amber-700/60">{type.desc}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* 3. 가족 구성원 */}
-      <div className="mb-8">
+      {/* 3. 가족 구성원 - 인원수 */}
+      <div className="mb-6">
         <label className="block text-sm font-bold text-amber-900 mb-3">
           👨‍👩‍👧 가족은 몇 명인가요?
         </label>
@@ -132,6 +168,46 @@ export default function Step1BasicInfo({ onNext }) {
               <span className="text-amber-900">{size.label}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* 4. 함께 사는 구성원 (다중 선택) */}
+      <div className="mb-8">
+        <label className="block text-sm font-bold text-amber-900 mb-1">
+          🏡 함께 사는 구성원이 있나요?
+        </label>
+        <p className="text-xs text-amber-700/60 mb-3">
+          중복 선택 가능해요 ✨
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {FAMILY_MEMBERS.map((m) => {
+            const isSelected = form.familyMembers?.includes(m.value);
+            return (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => toggleMember(m.value)}
+                className={`relative p-3 rounded-2xl border-2 transition 
+                            flex flex-col items-center gap-1
+                  ${
+                    isSelected
+                      ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
+                      : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200"
+                  }`}
+              >
+                {isSelected && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-amber-400 
+                                   text-white rounded-full flex items-center justify-center 
+                                   text-[10px] font-bold">
+                    ✓
+                  </span>
+                )}
+                <span className="text-2xl">{m.icon}</span>
+                <span className="text-xs font-bold text-amber-900">{m.label}</span>
+                <span className="text-[10px] text-amber-700/60">{m.desc}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
