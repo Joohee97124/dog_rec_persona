@@ -13,10 +13,10 @@ const SIZES = [
 const SIZE_ANY = { value: "any", label: "상관없음", icon: "💛", desc: "다 좋아요" };
 
 const AGES = [
-  { value: "puppy", label: "퍼피", icon: "🍼", desc: "~1살" },
+  { value: "puppy", label: "유년", icon: "🍼", desc: "~1살" },
   { value: "young", label: "청년", icon: "⚡", desc: "1~7살" },
-  { value: "senior", label: "시니어", icon: "🌳", desc: "7~10살" },
-  { value: "geriatric", label: "노령", icon: "🌅", desc: "10살 이상" },
+  { value: "senior", label: "중년", icon: "🌳", desc: "7~10살" },
+  { value: "geriatric", label: "노년", icon: "🌅", desc: "10살 이상" },
 ];
 
 const AGE_ANY = { value: "any", label: "상관없음", icon: "💛", desc: "다 좋아요" };
@@ -31,18 +31,6 @@ const PERSONALITY_TAGS = [
   { value: "smart", label: "영리한", icon: "🎓", desc: "훈련 잘 받아요" },
   { value: "loyal", label: "충직한", icon: "🛡️", desc: "한결같이 든든해요" },
 ];
-
-const getPersonalityMessage = (value) => {
-  if (value === undefined || value === "") return "슬라이더를 움직여 알려주세요";
-  const v = Number(value);
-  if (v <= 10) return "🏡 완전한 집순이/집돌이에요";
-  if (v <= 30) return "🌙 집에서 충전하는 편이에요";
-  if (v <= 49) return "📖 조용한 시간을 좋아해요";
-  if (v === 50) return "☯️ 상황에 따라 달라요";
-  if (v <= 70) return "☕ 적당히 활동적이에요";
-  if (v <= 90) return "🎉 사람 만나는 게 즐거워요";
-  return "🌟 완전한 밖순이/밖돌이에요";
-};
 
 export default function Step3Preference({ onNext, onPrev }) {
   const { answers, updateAnswers } = useSurvey();
@@ -105,7 +93,6 @@ export default function Step3Preference({ onNext, onPrev }) {
   };
 
   const isValid =
-    form.personality !== undefined && form.personality !== "" &&
     form.sizes?.length > 0 &&
     form.ages?.length > 0 &&
     form.personalityTags?.length > 0;
@@ -127,75 +114,6 @@ export default function Step3Preference({ onNext, onPrev }) {
         <p className="text-amber-700/70 text-sm">
           취향을 알려주시면 딱 맞는 친구를 찾아드려요 ✨
         </p>
-      </div>
-
-      {/* 1. 성향 - 슬라이더 */}
-      <div className="mb-7">
-        <label className="block text-sm font-bold text-amber-900 mb-3">
-          🌟 본인의 성향은?
-        </label>
-
-        <div className="bg-yellow-50/60 rounded-2xl p-5 border-2 border-yellow-100">
-          <div className="flex justify-between items-center mb-3">
-            <div className="text-center">
-              <div className="text-2xl">🌙</div>
-              <div className="text-xs font-bold text-amber-900 mt-1">내향</div>
-              <div className="text-[10px] text-amber-700/60">집순이</div>
-            </div>
-
-            <div className="text-center flex-1">
-              <div className="text-3xl font-bold text-amber-900">
-                {form.personality !== undefined && form.personality !== ""
-                  ? `${form.personality}%`
-                  : "?"}
-              </div>
-              <p className="text-[11px] text-amber-700/70 mt-1">
-                {getPersonalityMessage(form.personality)}
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="text-2xl">🎉</div>
-              <div className="text-xs font-bold text-amber-900 mt-1">외향</div>
-              <div className="text-[10px] text-amber-700/60">밖순이</div>
-            </div>
-          </div>
-
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="10"
-            value={form.personality !== "" && form.personality !== undefined ? form.personality : 50}
-            onChange={(e) => handleChange("personality", e.target.value)}
-            className="w-full h-2 bg-gradient-to-r from-blue-200 via-yellow-200 to-orange-200 
-                       rounded-full appearance-none cursor-pointer
-                       [&::-webkit-slider-thumb]:appearance-none
-                       [&::-webkit-slider-thumb]:w-6
-                       [&::-webkit-slider-thumb]:h-6
-                       [&::-webkit-slider-thumb]:rounded-full
-                       [&::-webkit-slider-thumb]:bg-amber-400
-                       [&::-webkit-slider-thumb]:border-4
-                       [&::-webkit-slider-thumb]:border-white
-                       [&::-webkit-slider-thumb]:shadow-md
-                       [&::-webkit-slider-thumb]:cursor-pointer
-                       [&::-moz-range-thumb]:w-6
-                       [&::-moz-range-thumb]:h-6
-                       [&::-moz-range-thumb]:rounded-full
-                       [&::-moz-range-thumb]:bg-amber-400
-                       [&::-moz-range-thumb]:border-4
-                       [&::-moz-range-thumb]:border-white
-                       [&::-moz-range-thumb]:cursor-pointer"
-          />
-
-          <div className="flex justify-between mt-2 text-[10px] text-amber-700/50 font-medium">
-            <span>0%</span>
-            <span>25%</span>
-            <span>50%</span>
-            <span>75%</span>
-            <span>100%</span>
-          </div>
-        </div>
       </div>
 
       {/* 2. 선호 크기 - 다중 선택 */}

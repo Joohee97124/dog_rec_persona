@@ -2,11 +2,22 @@
 import { useState } from "react";
 import { useSurvey } from "../../context/SurveyContext";
 
-const HOUSE_TYPES = [
-  { value: "one_room", label: "원룸", icon: "🛏️", desc: "1개 공간" },
-  { value: "two_room", label: "투룸", icon: "🏠", desc: "2개 방" },
+const ROOM_COUNTS = [
+  { value: "one_room",   label: "원룸",     icon: "🛏️", desc: "1개 공간" },
+  { value: "two_room",   label: "투룸",     icon: "🏠", desc: "2개 방" },
   { value: "three_plus", label: "3룸 이상", icon: "🏘️", desc: "방 3개~" },
-  { value: "house", label: "주택", icon: "🏡", desc: "단독/마당" },
+  { value: "etc",        label: "기타",     icon: "✨", desc: "그 외" },
+];
+
+const HOUSING_TYPES = [
+  { value: "apartment", label: "공동주택", icon: "🏢", desc: "아파트·빌라·오피스텔" },
+  { value: "house",     label: "단독주택", icon: "🏡", desc: "단독·전원주택" },
+  { value: "etc",     label: "기타", icon: "✨", desc: "그 외" },
+];
+
+const YARD_OPTIONS = [
+  { value: "yes", label: "있음", icon: "🌳" },
+  { value: "no",  label: "없음", icon: "🚫" },
 ];
 
 const FAMILY_SIZES = [
@@ -28,6 +39,9 @@ export default function Step1BasicInfo({ onNext }) {
   const [form, setForm] = useState({
     ...answers.step1,
     familyMembers: answers.step1?.familyMembers || [],
+    roomCount:    answers.step1?.roomCount    || "",
+    housingType:  answers.step1?.housingType  || "",
+    hasYard:      answers.step1?.hasYard      || "",
   });
 
   const handleChange = (key, value) =>
@@ -57,7 +71,9 @@ export default function Step1BasicInfo({ onNext }) {
   const isValid =
     form.age &&
     form.gender &&
-    form.houseType &&
+    form.roomCount &&
+    form.housingType &&
+    form.hasYard &&
     form.familySize &&
     form.familyMembers?.length > 0;
 
@@ -92,7 +108,7 @@ export default function Step1BasicInfo({ onNext }) {
             min="1"
             max="120"
             placeholder="나이를 입력해주세요"
-            value={form.age}
+            value={form.age || ""}
             onChange={(e) => handleChange("age", e.target.value)}
             className="flex-1 px-4 py-3 bg-yellow-50/50 border-2 border-yellow-100 
                        rounded-2xl text-amber-900 placeholder:text-amber-400/60
@@ -117,20 +133,20 @@ export default function Step1BasicInfo({ onNext }) {
         </div>
       </div>
 
-      {/* 2. 거주 형태 */}
+      {/* 2-1. 방 개수 */}
       <div className="mb-7">
         <label className="block text-sm font-bold text-amber-900 mb-3">
-          🏠 어디에 살고 계신가요?
+          🚪 거주하고 계신 집의 방 개수가 몇 개이신가요?
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {HOUSE_TYPES.map((type) => (
+          {ROOM_COUNTS.map((type) => (
             <button
               key={type.value}
               type="button"
-              onClick={() => handleChange("houseType", type.value)}
+              onClick={() => handleChange("roomCount", type.value)}
               className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-1
                 ${
-                  form.houseType === type.value
+                  form.roomCount === type.value
                     ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
                     : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200 hover:bg-yellow-50"
                 }`}
@@ -145,10 +161,65 @@ export default function Step1BasicInfo({ onNext }) {
         </div>
       </div>
 
+      {/* 2-2. 거주 형태 */}
+      <div className="mb-7">
+        <label className="block text-sm font-bold text-amber-900 mb-3">
+          🏠 거주하고 계신 형태가 어떻게 되시나요?
+        </label>
+        <div className="grid grid-cols-3 gap-3"> 
+          {HOUSING_TYPES.map((type) => (
+            <button
+              key={type.value}
+              type="button"
+              onClick={() => handleChange("housingType", type.value)}
+              className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-1
+                ${
+                  form.housingType === type.value
+                    ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
+                    : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200 hover:bg-yellow-50"
+                }`}
+            >
+              <span className="text-3xl mb-1">{type.icon}</span>
+              <span className="text-sm font-bold text-amber-900">
+                {type.label}
+              </span>
+              <span className="text-xs text-amber-700/60">{type.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 2-3. 마당 유무 */}
+      <div className="mb-7">
+        <label className="block text-sm font-bold text-amber-900 mb-3">
+          🌿 마당이 있으신가요?
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          {YARD_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => handleChange("hasYard", opt.value)}
+              className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-1
+                ${
+                  form.hasYard === opt.value
+                    ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
+                    : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200 hover:bg-yellow-50"
+                }`}
+            >
+              <span className="text-3xl mb-1">{opt.icon}</span>
+              <span className="text-sm font-bold text-amber-900">
+                {opt.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 3. 가족 구성원 - 인원수 */}
       <div className="mb-6">
         <label className="block text-sm font-bold text-amber-900 mb-3">
-          👨‍👩‍👧 가족은 몇 명인가요?
+          👨‍👩‍👧 가족은 몇 명인가요? (본인 포함)
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {FAMILY_SIZES.map((size) => (
