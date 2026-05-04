@@ -1,0 +1,170 @@
+-- ============================================================
+-- dog.csv → DOG / DOG_DETAIL / TAG / DOG_TAG_MAP 적재
+-- 사용법: psql -v csv_path=/abs/path/dog.csv -f insertDB.sql
+-- ============================================================
+\set ON_ERROR_STOP on
+BEGIN;
+
+-- 1) CSV 헤더와 1:1 매핑되는 STAGING 테이블 (세션 종료 시 자동 삭제)
+CREATE TEMP TABLE stg_dog (
+    uid                 INTEGER,
+    name                TEXT,
+    subject             TEXT,
+    gender              TEXT,
+    neuter              TEXT,
+    birth               TEXT,        -- "202301" 형태
+    weight              TEXT,        -- 숫자 변환 시 빈문자 처리 필요해서 TEXT로 받음
+    tags                TEXT,
+    rescue_story        TEXT,
+    personality_detail  TEXT,
+    additional_info     TEXT,
+    region              TEXT,
+    temp_period         TEXT,
+    addinfo13sub01      TEXT,
+    addinfo13sub02      TEXT,
+    pickup              TEXT,
+    house_type          TEXT,
+    etc_condition       TEXT,
+    vaccine             TEXT,
+    health_check        TEXT,
+    illness             TEXT,
+    health_etc          TEXT,
+    addinfo21           TEXT,
+    addinfo22           TEXT,
+    d_regis             TEXT,
+    s_pic01             TEXT,
+    snsinfo             TEXT,
+    ytinfo              TEXT,
+    year                TEXT,
+    month               TEXT,
+    history             TEXT,
+    type_1_score TEXT,  type_1_desc  TEXT, type_1_comment  TEXT,
+    type_2_score TEXT,  type_2_desc  TEXT, type_2_comment  TEXT,
+    type_3_score TEXT,  type_3_desc  TEXT, type_3_comment  TEXT,
+    type_4_score TEXT,  type_4_desc  TEXT, type_4_comment  TEXT,
+    type_5_score TEXT,  type_5_desc  TEXT, type_5_comment  TEXT,
+    type_6_score TEXT,  type_6_desc  TEXT, type_6_comment  TEXT,
+    type_7_score TEXT,  type_7_desc  TEXT, type_7_comment  TEXT,
+    type_8_score TEXT,  type_8_desc  TEXT, type_8_comment  TEXT,
+    type_9_score TEXT,  type_9_desc  TEXT, type_9_comment  TEXT,
+    type_10_score TEXT, type_10_desc TEXT, type_10_comment TEXT
+);
+
+-- 2) CSV 적재 (\COPY = psql 클라이언트 측 파일, AWS RDS 호환)
+\COPY stg_dog FROM :'csv_path' WITH (FORMAT csv, HEADER true, QUOTE '"', ENCODING 'UTF8');
+
+-- ============================================================
+-- 3) DOG 테이블 적재 (UPSERT)
+-- ============================================================
+INSERT INTO dog (
+    did, name, gender, neuter, state, weight, birth_year, image,
+    ty1_sc, ty2_sc, ty3_sc, ty4_sc, ty5_sc,
+    ty6_sc, ty7_sc, ty8_sc, ty9_sc, ty10_sc,
+    created_at, updated_at
+)
+SELECT
+    uid,
+    name,
+    NULLIF(gender, ''),
+    NULLIF(neuter, ''),
+    NULL::varchar,                                 -- state: 매핑 컬럼 없음
+    NULLIF(weight, '')::numeric(5,2),
+    NULLIF(LEFT(birth, 4), '')::int,               -- "202301" → 2023
+    NULLIF(s_pic01, ''),
+    NULLIF(type_1_score,  '')::numeric(3,2),
+    NULLIF(type_2_score,  '')::numeric(3,2),
+    NULLIF(type_3_score,  '')::numeric(3,2),
+    NULLIF(type_4_score,  '')::numeric(3,2),
+    NULLIF(type_5_score,  '')::numeric(3,2),
+    NULLIF(type_6_score,  '')::numeric(3,2),
+    NULLIF(type_7_score,  '')::numeric(3,2),
+    NULLIF(type_8_score,  '')::numeric(3,2),
+    NULLIF(type_9_score,  '')::numeric(3,2),
+    NULLIF(type_10_score, '')::numeric(3,2),
+    NOW(), NOW()
+FROM stg_dog
+ON CONFLICT (did) DO UPDATE SET
+    name       = EXCLUDED.name,
+    gender     = EXCLUDED.gender,
+    neuter     = EXCLUDED.neuter,
+    weight     = EXCLUDED.weight,
+    birth_year = EXCLUDED.birth_year,
+    image      = EXCLUDED.image,
+    ty1_sc=EXCLUDED.ty1_sc, ty2_sc=EXCLUDED.ty2_sc, ty3_sc=EXCLUDED.ty3_sc,
+    ty4_sc=EXCLUDED.ty4_sc, ty5_sc=EXCLUDED.ty5_sc, ty6_sc=EXCLUDED.ty6_sc,
+    ty7_sc=EXCLUDED.ty7_sc, ty8_sc=EXCLUDED.ty8_sc, ty9_sc=EXCLUDED.ty9_sc,
+    ty10_sc=EXCLUDED.ty10_sc,
+    updated_at = NOW();
+
+-- ============================================================
+-- 4) DOG_DETAIL 테이블 적재 (UPSERT)
+-- ============================================================
+INSERT INTO dog_detail (
+    did, story, per_detail,
+    ty1_de, ty2_de, ty3_de, ty4_de, ty5_de,
+    ty6_de, ty7_de, ty8_de, ty9_de, ty10_de,
+    created_at, updated_at
+)
+SELECT
+    uid,
+    NULLIF(rescue_story, ''),
+    NULLIF(personality_detail, ''),
+    NULLIF(type_1_comment,  ''),
+    NULLIF(type_2_comment,  ''),
+    NULLIF(type_3_comment,  ''),
+    NULLIF(type_4_comment,  ''),
+    NULLIF(type_5_comment,  ''),
+    NULLIF(type_6_comment,  ''),
+    NULLIF(type_7_comment,  ''),
+    NULLIF(type_8_comment,  ''),
+    NULLIF(type_9_comment,  ''),
+    NULLIF(type_10_comment, ''),
+    NOW(), NOW()
+FROM stg_dog
+ON CONFLICT (did) DO UPDATE SET
+    story      = EXCLUDED.story,
+    per_detail = EXCLUDED.per_detail,
+    ty1_de=EXCLUDED.ty1_de, ty2_de=EXCLUDED.ty2_de, ty3_de=EXCLUDED.ty3_de,
+    ty4_de=EXCLUDED.ty4_de, ty5_de=EXCLUDED.ty5_de, ty6_de=EXCLUDED.ty6_de,
+    ty7_de=EXCLUDED.ty7_de, ty8_de=EXCLUDED.ty8_de, ty9_de=EXCLUDED.ty9_de,
+    ty10_de=EXCLUDED.ty10_de,
+    updated_at = NOW();
+
+-- ============================================================
+-- 5) TAG / DOG_TAG_MAP 적재
+--    tags 예) "#애교쟁이#사람좋아#친구좋아#똑똑이#장난감최고"
+-- ============================================================
+
+-- 5-1) tags 컬럼을 (uid, tag_name) 형태로 펼치기
+WITH split_tags AS (
+    SELECT
+        s.uid AS did,
+        TRIM(t) AS tag_name
+    FROM stg_dog s,
+         LATERAL regexp_split_to_table(COALESCE(s.tags, ''), '#') AS t
+    WHERE TRIM(t) <> ''
+),
+-- 5-2) 새 태그를 TAG 테이블에 등록 (이미 있으면 무시)
+ins_tag AS (
+    INSERT INTO tag (tag_name, created_at)
+    SELECT DISTINCT tag_name, NOW()
+    FROM split_tags
+    ON CONFLICT (tag_name) DO NOTHING
+    RETURNING tag_id, tag_name
+)
+-- 5-3) DOG_TAG_MAP 적재 (기존 tag_id 와 신규 tag_id 모두 사용)
+INSERT INTO dog_tag_map (did, tag_id)
+SELECT DISTINCT st.did, t.tag_id
+FROM split_tags st
+JOIN tag t ON t.tag_name = st.tag_name
+ON CONFLICT (did, tag_id) DO NOTHING;
+
+-- ============================================================
+-- 6) 적재 결과 확인
+-- ============================================================
+SELECT 'dog'          AS tbl, COUNT(*) FROM dog
+UNION ALL SELECT 'dog_detail',   COUNT(*) FROM dog_detail
+UNION ALL SELECT 'tag',          COUNT(*) FROM tag
+UNION ALL SELECT 'dog_tag_map',  COUNT(*) FROM dog_tag_map;
+
+COMMIT;

@@ -1,0 +1,35 @@
+#!/bin/bash
+# ============================================================
+# dog.csv → PostgreSQL (DOG / DOG_DETAIL / TAG / DOG_TAG_MAP) 적재
+# 사용법: ./insertDB.sh ./dog.csv
+# ============================================================
+set -euo pipefail
+
+# ---- DB 접속 정보 (로컬 Docker 테스트용) ----
+: "${PGHOST:=localhost}"          # ← 로컬 Docker
+: "${PGPORT:=5432}"               # ← Docker run 시 -p 5432:5432
+: "${PGUSER:=postgres}"           # ← Docker 기본 유저
+: "${PGDATABASE:=dogdb}"          # ← -e POSTGRES_DB=dogdb
+: "${PGPASSWORD:=test1234}"       # ← -e POSTGRES_PASSWORD=test1234
+export PGHOST PGPORT PGUSER PGDATABASE PGPASSWORD
+
+# ---- 이하 동일 ----
+CSV_PATH="${1:-./dog.csv}"
+SQL_PATH="$(dirname "$0")/insertDB.sql"
+
+[[ -f "$CSV_PATH" ]] || { echo "[ERROR] CSV 파일이 없습니다: $CSV_PATH"; exit 1; }
+[[ -f "$SQL_PATH" ]] || { echo "[ERROR] SQL 파일이 없습니다: $SQL_PATH"; exit 1; }
+
+CSV_ABS="$(readlink -f "$CSV_PATH")"
+
+echo "[INFO] DB  = $PGUSER@$PGHOST:$PGPORT/$PGDATABASE"
+echo "[INFO] CSV = $CSV_ABS"
+echo "[INFO] SQL = $SQL_PATH"
+echo "[INFO] 적재 시작..."
+
+psql \
+  --set=ON_ERROR_STOP=1 \
+  --set=csv_path="$CSV_ABS" \
+  -f "$SQL_PATH"
+
+echo "[INFO] 적재 완료 ✅"
