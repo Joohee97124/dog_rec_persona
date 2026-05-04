@@ -22,14 +22,14 @@ const AGES = [
 const AGE_ANY = { value: "any", label: "상관없음", icon: "💛", desc: "다 좋아요" };
 
 const PERSONALITY_TAGS = [
-  { value: "affectionate", label: "애교 많은", icon: "🥰", desc: "곁에 꼭 붙어요" },
-  { value: "independent", label: "독립적인", icon: "😎", desc: "혼자도 잘 지내요" },
-  { value: "active", label: "활발한", icon: "🎾", desc: "에너지 넘쳐요" },
-  { value: "calm", label: "차분한", icon: "🛋️", desc: "조용히 함께해요" },
-  { value: "friendly", label: "사람 좋아", icon: "🤗", desc: "모두와 친해요" },
-  { value: "social", label: "사회성 좋은", icon: "🐾", desc: "강아지 친구 OK" },
-  { value: "smart", label: "영리한", icon: "🎓", desc: "훈련 잘 받아요" },
-  { value: "loyal", label: "충직한", icon: "🛡️", desc: "한결같이 든든해요" },
+  { value: "affectionate", label: "애교쟁이", icon: "🥰", desc: "사람을 좋아하고\n곁에 꼭 붙어요" },
+  { value: "independent", label: "꾸러기", icon: "😎", desc: "호기심이 많고\n장난감을 좋아해요" },
+  { value: "active", label: "독립심짱", icon: "🛋️", desc: "한결같이 든든해요" },
+  { value: "calm", label: "산책최고", icon: "🎾", desc: "산책을 좋아하고\n에너지가 넘쳐요" },
+  { value: "friendly", label: "똑똑이", icon: "🎓", desc: "훈련을 잘 받고\n눈치가 빨라요" },
+  { value: "social", label: "순둥이", icon: "🛡️", desc: "적응을 잘하고\n사람을 좋아해요"},
+  { value: "smart", label: "조용조용", icon: "🤗", desc: "혼자만의 시간을\n잘 보내요" },
+  { value: "loyal", label: "친구조아", icon: "🐾", desc: "강아지 친구 OK\n모두와 친해요" },
 ];
 
 export default function Step3Preference({ onNext, onPrev }) {
