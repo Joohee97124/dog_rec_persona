@@ -5,7 +5,15 @@ const SurveyContext = createContext();
 
 export const SurveyProvider = ({ children }) => {
   const [answers, setAnswers] = useState({
-    step1: { age: "", gender: "", houseType: "", familySize: "" },
+    step1: {
+      age: "",
+      gender: "",
+      roomCount: "",
+      housingType: "",
+      hasYard: "",
+      familySize: "",
+      familyMembers: [],
+    },
     step2: {},
     step3: {},
     step4: {},

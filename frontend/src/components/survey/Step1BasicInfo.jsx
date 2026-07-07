@@ -38,10 +38,13 @@ export default function Step1BasicInfo({ onNext }) {
   const { answers, updateAnswers } = useSurvey();
   const [form, setForm] = useState({
     ...answers.step1,
+    age:           answers.step1?.age           || "",
+    gender:        answers.step1?.gender        || "",
     familyMembers: answers.step1?.familyMembers || [],
-    roomCount:    answers.step1?.roomCount    || "",
-    housingType:  answers.step1?.housingType  || "",
-    hasYard:      answers.step1?.hasYard      || "",
+    roomCount:     answers.step1?.roomCount     || "",
+    housingType:   answers.step1?.housingType   || "",
+    hasYard:       answers.step1?.hasYard       || "",
+    familySize:    answers.step1?.familySize    || "",
   });
 
   const handleChange = (key, value) =>
@@ -71,7 +74,7 @@ export default function Step1BasicInfo({ onNext }) {
   const isValid =
     form.age &&
     form.gender &&
-    form.roomCount &&
+    // form.roomCount &&  // 방 개수 문항 비활성화로 인해 유효성 검사에서 제외
     form.housingType &&
     form.hasYard &&
     form.familySize &&
@@ -133,7 +136,7 @@ export default function Step1BasicInfo({ onNext }) {
         </div>
       </div>
 
-      {/* 2-1. 방 개수 */}
+      {/* 2-1. 방 개수 (임시 비활성화 - 주석 처리)
       <div className="mb-7">
         <label className="block text-sm font-bold text-amber-900 mb-3">
           🚪 거주하고 계신 집의 방 개수가 몇 개이신가요?
@@ -160,6 +163,7 @@ export default function Step1BasicInfo({ onNext }) {
           ))}
         </div>
       </div>
+      */}
 
       {/* 2-2. 거주 형태 */}
       <div className="mb-7">

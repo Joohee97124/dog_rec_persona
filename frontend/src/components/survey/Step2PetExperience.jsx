@@ -3,11 +3,11 @@ import { useState } from "react";
 import { useSurvey } from "../../context/SurveyContext";
 import NavButtons from "../common/NavButtons";
 
-const PREVIOUS_PETS = [
-  { value: "none", label: "처음이에요", icon: "🌱" },
+const CURRENT_PETS = [
   { value: "dog", label: "강아지", icon: "🐶" },
   { value: "cat", label: "고양이", icon: "🐱" },
   { value: "other", label: "기타", icon: "🐹" },
+  { value: "no", label: "없음", icon: "❌" },
 ];
 
 const getOutingMessage = (hours) => {
@@ -27,20 +27,27 @@ export default function Step2PetExperience({ onNext, onPrev }) {
   const handleChange = (key, value) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handlePetChange = (value) => {
+  const handleExperienceChange = (value) => {
     setForm((prev) => ({
       ...prev,
-      previousPet: value,
-      ...(value === "none" && { petCount: "", petYears: "" }),
+      hasDogExperience: value,
+      ...(value === "no" && { dogYears: "" }),
     }));
   };
 
-  const hasPet = form.previousPet && form.previousPet !== "none";
+  const handleCurrentPetChange = (value) => {
+    setForm((prev) => ({
+      ...prev,
+      currentPet: value,
+      ...(value !== "other" && { currentPetOther: "" }),
+    }));
+  };
 
   const isValid =
-    form.previousPet &&
-    (form.previousPet === "none" ||
-      (form.petCount && form.petYears)) &&
+    form.hasDogExperience &&
+    (form.hasDogExperience === "no" || form.dogYears) &&
+    form.currentPet &&
+    (form.currentPet !== "other" || form.currentPetOther) &&
     form.outingHours !== undefined && form.outingHours !== "";
 
   const handleSubmit = () => {
@@ -62,20 +69,77 @@ export default function Step2PetExperience({ onNext, onPrev }) {
         </p>
       </div>
 
-      {/* 1. 현재 반려동물 + 조건부 마릿수/연차 */}
+      {/* 1. 반려견 경험 여부 */}
       <div className="mb-7">
         <label className="block text-sm font-bold text-amber-900 mb-3">
-          🐕 현재 함께 하는 반려동물이 있나요?
+          🐕 반려견을 키워본 경험이 있나요?
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {PREVIOUS_PETS.map((pet) => (
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { value: "yes", label: "예", icon: "🙋" },
+            { value: "no", label: "아니오", icon: "🙅" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => handleExperienceChange(opt.value)}
+              className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-2
+                ${
+                  form.hasDogExperience === opt.value
+                    ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
+                    : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200"
+                }`}
+            >
+              <span className="text-3xl">{opt.icon}</span>
+              <span className="text-sm font-bold text-amber-900">{opt.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {form.hasDogExperience === "yes" && (
+          <div className="mt-4 bg-yellow-50/60 rounded-2xl p-5 border-2 border-yellow-100 animate-fade-in">
+            <p className="text-xs text-amber-700/80 font-bold mb-4 flex items-center gap-1">
+              🌼 조금 더 알려주세요
+            </p>
+            <div className="flex items-center gap-3">
+              <span className="text-amber-900 font-bold text-sm w-44">
+                가장 오래 함께했던 기간
+              </span>
+              <input
+                type="number"
+                min="0"
+                max="50"
+                step="0.5"
+                placeholder="5"
+                value={form.dogYears || ""}
+                onChange={(e) => handleChange("dogYears", e.target.value)}
+                className="w-20 px-3 py-2 bg-white border-2 border-yellow-200 
+                           rounded-xl text-amber-900 text-center font-bold
+                           focus:outline-none focus:border-yellow-400 transition"
+              />
+              <span className="text-amber-900 font-bold text-sm">년</span>
+            </div>
+            <p className="text-[11px] text-amber-700/60 mt-3">
+              💡 한 마리 기준으로 가장 길게 함께한 기간을 적어주세요
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* 2. 현재 반려동물 여부 */}
+      <div className="mb-7">
+        <label className="block text-sm font-bold text-amber-900 mb-3">
+          🏠 현재 함께 하는 반려동물이 있나요?
+        </label>
+        <div className="grid grid-cols-4 gap-4">
+          {CURRENT_PETS.map((pet) => (
             <button
               key={pet.value}
               type="button"
-              onClick={() => handlePetChange(pet.value)}
+              onClick={() => handleCurrentPetChange(pet.value)}
               className={`p-4 rounded-2xl border-2 transition flex flex-col items-center gap-2
                 ${
-                  form.previousPet === pet.value
+                  form.currentPet === pet.value
                     ? "border-yellow-400 bg-yellow-100 scale-105 shadow-md"
                     : "border-yellow-100 bg-yellow-50/30 hover:border-yellow-200"
                 }`}
@@ -86,67 +150,28 @@ export default function Step2PetExperience({ onNext, onPrev }) {
           ))}
         </div>
 
-        {hasPet && (
-          <div className="mt-4 bg-yellow-50/60 rounded-2xl p-5 border-2 border-yellow-100 
-                          animate-fade-in">
-            <p className="text-xs text-amber-700/80 font-bold mb-4 flex items-center gap-1">
-              🌼 조금 더 알려주세요
-            </p>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-amber-900 font-bold text-sm w-28">
-                  함께한 아이들
-                </span>
-                <input
-                  type="number"
-                  min="1"
-                  max="50"
-                  placeholder="2"
-                  value={form.petCount || ""}
-                  onChange={(e) => handleChange("petCount", e.target.value)}
-                  className="w-20 px-3 py-2 bg-white border-2 border-yellow-200 
-                             rounded-xl text-amber-900 text-center font-bold
-                             focus:outline-none focus:border-yellow-400 transition"
-                />
-                <span className="text-amber-900 font-bold text-sm">마리</span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-amber-900 font-bold text-sm w-28">
-                  총 양육 기간
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="0.5"
-                  placeholder="5"
-                  value={form.petYears || ""}
-                  onChange={(e) => handleChange("petYears", e.target.value)}
-                  className="w-20 px-3 py-2 bg-white border-2 border-yellow-200 
-                             rounded-xl text-amber-900 text-center font-bold
-                             focus:outline-none focus:border-yellow-400 transition"
-                />
-                <span className="text-amber-900 font-bold text-sm">년</span>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-amber-700/60 mt-3">
-              💡 정확하지 않아도 괜찮아요. 대략적으로 적어주세요!
-            </p>
+        {form.currentPet === "other" && (
+          <div className="mt-4 animate-fade-in">
+            <input
+              type="text"
+              placeholder="어떤 친구인지 알려주세요 🐾"
+              value={form.currentPetOther || ""}
+              onChange={(e) => handleChange("currentPetOther", e.target.value)}
+              className="w-full px-4 py-3 bg-yellow-50/60 border-2 border-yellow-200 
+                         rounded-2xl text-amber-900 font-bold placeholder:text-amber-300
+                         focus:outline-none focus:border-yellow-400 transition"
+            />
           </div>
         )}
       </div>
 
-      {/* 2. 하루 외출시간 - 슬라이더 */}
+      {/* 3. 하루 외출시간 */}
       <div className="mb-8">
         <label className="block text-sm font-bold text-amber-900 mb-3">
           🕐 평일 기준, 평균 외출시간은?
         </label>
 
         <div className="bg-yellow-50/60 rounded-2xl p-5 border-2 border-yellow-100">
-          {/* 현재 값 큰 표시 */}
           <div className="text-center mb-4">
             <div className="text-4xl font-bold text-amber-900">
               {form.outingHours !== undefined && form.outingHours !== ""
@@ -158,7 +183,6 @@ export default function Step2PetExperience({ onNext, onPrev }) {
             </p>
           </div>
 
-          {/* 슬라이더 */}
           <input
             type="range"
             min="0"
@@ -185,7 +209,6 @@ export default function Step2PetExperience({ onNext, onPrev }) {
                        [&::-moz-range-thumb]:cursor-pointer"
           />
 
-          {/* 눈금 표시 */}
           <div className="flex justify-between mt-3 text-[10px] text-amber-700/50 font-medium">
             <span>0h</span>
             <span>6h</span>
